@@ -6,20 +6,25 @@ import asyncHandler from "express-async-handler";
 // @route   POST /api/admin/auth
 //  @access  Public
 export const authAdmin = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
+    const admin = await Admin.findOne({ email });
 
-  const admin = await Admin.findOne({ email });
-
-  if (admin && (await admin.matchPassword(password))) {
-    generateToken(res, admin._id);
-    res.status(201).json({
-      message: "Login Successfully",
-      id: admin._id,
-      name: admin.name,
-      email: admin.email,
-    });
-  } else {
-    res.status(401).json({ message: "Invalid Email and Password" });
+    if (admin && (await admin.matchPassword(password))) {
+      generateToken(res, admin._id);
+      res.status(201).json({
+        message: "Login Successfully",
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+      });
+    } else {
+      res.status(401).json({ message: "Invalid Email and Password" });
+    }
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
   }
 });
 
@@ -60,7 +65,7 @@ export const registerAdmin = asyncHandler(async (req, res) => {
 // @route   GET /api/admin/profile
 //  @access  Private
 export const getAdminProfile = asyncHandler(async (req, res) => {
-  const admin = await Admin.find().sort({ length: -1 });
+  const admin = await Admin.find().sort({ createdAt: -1 });
   res.status(200).json({
     status: true,
     message: "User Profile",
@@ -76,10 +81,9 @@ export const logoutAdmin = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "User Logged Out" });
 });
 
-
-// @desc    update admin 
+// @desc    update admin
 // @route   POST /api/admin/register
-//  @access  Private 
+//  @access  Private
 export const updateAdminProfile = asyncHandler(async (req, res) => {
   const admin = await Admin.findById(req.admin._id);
 
