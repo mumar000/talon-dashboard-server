@@ -37,6 +37,41 @@ export const uploadBulkPictures = asyncHandler(async (req, res) => {
   }
 });
 
+export const getPicturesByCategory = asyncHandler(async (req, res) => {
+  try {
+    const { category } = req.params;
+    if (!category) {
+      return res.status(400).json({
+        status: false,
+        message: "Category is required",
+      });
+    }
+
+    const pictures = await bulkUpload
+      .find({ category: category })
+      .sort({ createdAt: -1 });
+
+    if (pictures.length > 0) {
+      const allPictures = pictures.flatMap((doc) => doc.uploaded_Pictures);
+      return res.status(200).json({
+        status: true,
+        message: `All Pictures of Category: ${category}`,
+        pictures: allPictures,
+      });
+    } else {
+      return res
+        .status(404)
+        .json({ message: "Not picture found in this category" });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+});
+
 export const getAllPictures = asyncHandler(async (req, res) => {
   const allPictures = await bulkUpload.find().sort({ createdAt: -1 });
   if (allPictures) {

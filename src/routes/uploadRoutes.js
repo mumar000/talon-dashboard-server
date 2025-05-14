@@ -1,6 +1,7 @@
 import {
   uploadBulkPictures,
   getAllPictures,
+  getPicturesByCategory,
 } from "../controllers/bulkUploadController.js";
 import handleUploadError, {
   uploadMultiple,
@@ -14,6 +15,7 @@ router.post(
   uploadMultiple,
   uploadBulkPictures
 );
+router.get("/pictures/:category", getPicturesByCategory);
 router.get("/getPictures", getAllPictures);
 
 export default router;
