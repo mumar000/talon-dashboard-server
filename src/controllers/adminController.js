@@ -8,7 +8,7 @@ import asyncHandler from "express-async-handler";
 export const authAdmin = asyncHandler(async (req, res) => {
   try {
     const { email, password } = req.body;
-    const admin = await Admin.findOne({ email });
+    const admin = await Admin.findOne({ email }).select("+role");
 
     if (admin && (await admin.matchPassword(password))) {
       generateToken(res, admin._id);
@@ -17,6 +17,7 @@ export const authAdmin = asyncHandler(async (req, res) => {
         id: admin._id,
         name: admin.name,
         email: admin.email,
+        role: admin.role,
       });
     } else {
       res.status(401).json({ message: "Invalid Email and Password" });
@@ -54,6 +55,7 @@ export const registerAdmin = asyncHandler(async (req, res) => {
       id: admin._id,
       name: admin.name,
       email: admin.email,
+      role: "Admin",
     });
   } else {
     res.status(400).json({ message: "Internal Server Error" });

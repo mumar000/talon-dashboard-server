@@ -17,6 +17,7 @@ export const authUser = asyncHandler(async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role,
       });
     } else {
       res.status(401).json({ message: "Invalid Email and Password" });
@@ -52,6 +53,7 @@ export const registerUser = asyncHandler(async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
+      role: user.role,
     });
   } else {
     res.status(400);

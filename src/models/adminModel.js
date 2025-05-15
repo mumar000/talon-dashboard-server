@@ -6,6 +6,7 @@ const adminSchema = mongoose.Schema(
     name: { type: String, required: true },
     email: { type: String, require: true, unique: true },
     password: { type: String, required: true },
+    role: { type: String, default: "admin" },
   },
   {
     timestamps: true,
@@ -21,7 +22,7 @@ adminSchema.pre("save", async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-adminSchema.methods.matchPassword = async function(enteredPassword) {
+adminSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
