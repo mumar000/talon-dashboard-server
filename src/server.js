@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import handleUploadError from "./middleware/uploadMiddleware.js";
+import { handleUploadError } from "./middleware/uploadMiddleware.js";
 dotenv.config();
 import cookieParser from "cookie-parser";
 import { notFound, errorHanlder } from "./middleware/errorMiddleware.js";

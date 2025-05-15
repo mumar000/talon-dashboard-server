@@ -3,16 +3,17 @@ import {
   getAllPictures,
   getPicturesByCategory,
 } from "../controllers/bulkUploadController.js";
-import handleUploadError, {
+import {
   uploadMultiple,
+  handleUploadError,
 } from "../middleware/uploadMiddleware.js";
 import express from "express";
 const router = express.Router();
 
 router.post(
   "/upload-pictures",
-  handleUploadError,
   uploadMultiple,
+  handleUploadError,
   uploadBulkPictures
 );
 router.get("/pictures/:category", getPicturesByCategory);

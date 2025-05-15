@@ -1,7 +1,6 @@
 import asyncHandler from "express-async-handler";
 import bulkUpload from "../models/bulkUploadModel.js";
-import { uploadtoCloudinary } from "../services/cloudinary.js";
-
+import { uploadToCloudinary } from "../middleware/uploadMiddleware.js";
 export const uploadBulkPictures = asyncHandler(async (req, res) => {
   try {
     const files = req.files;
@@ -10,7 +9,10 @@ export const uploadBulkPictures = asyncHandler(async (req, res) => {
     }
 
     const { category, type } = req.body;
-    const uploadPromises = files.map((file) => uploadtoCloudinary(file));
+    const uploadPromises = files.map((file) =>
+      uploadToCloudinary(file.buffer, "bulk_uploads")
+    );
+
     const uploadedUrls = await Promise.all(uploadPromises);
 
     let uploadedPic;
