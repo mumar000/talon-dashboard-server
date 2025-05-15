@@ -23,7 +23,7 @@ export const uploadBulkPictures = asyncHandler(async (req, res) => {
       uploaded_Pictures: uploadedUrls,
     });
 
-    await uploadedPic.save().sort({ createdAt: -1 });
+    await uploadedPic.save();
 
     return res.status(200).json({
       status: true,
