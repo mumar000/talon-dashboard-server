@@ -14,7 +14,10 @@ import adminRoute from "./routes/adminRoute.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 app.use(
   cors({
-    origin: "https://talon-admindashboard.netlify.app",
+    origin: [
+      "https://talon-admindashboard.netlify.app",
+      "http://localhost:3080",
+    ],
     credentials: true,
   })
 );
