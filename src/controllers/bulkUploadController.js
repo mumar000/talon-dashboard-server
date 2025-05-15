@@ -1,7 +1,6 @@
 import asyncHandler from "express-async-handler";
 import bulkUpload from "../models/bulkUploadModel.js";
 import { uploadtoCloudinary } from "../services/cloudinary.js";
-import { all } from "axios";
 
 export const uploadBulkPictures = asyncHandler(async (req, res) => {
   try {
