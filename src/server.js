@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import cors from "cors";
 import { handleUploadError } from "./middleware/uploadMiddleware.js";
 dotenv.config();
 import cookieParser from "cookie-parser";
@@ -11,7 +12,12 @@ const PORT = process.env.PORT || 5080;
 import userRoutes from "./routes/userRoute.js";
 import adminRoute from "./routes/adminRoute.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
-
+app.use(
+  cors({
+    origin: "https://talon-admindashboard.netlify.app",
+    credentials: true,
+  })
+);
 mongoose
   .connect(process.env.MONGO_URL)
   .then(() => console.log("MongoDB Connected"))
