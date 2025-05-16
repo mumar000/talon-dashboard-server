@@ -1,6 +1,7 @@
 import asyncHandler from "express-async-handler";
 import generateToken from "../../utils/generateToken.js";
 import User from "../models/userModel.js";
+import Inquiry from "../models/inquiryModel.js";
 
 // @desc    Authenticate user and set JWT token
 // @route   POST /api/users/auth
@@ -121,5 +122,47 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
       message: "Inter Server Error",
       error: error.message,
     });
+  }
+});
+
+export const submitInquiry = asyncHandler(async (req, res) => {
+  try {
+    const { areaOfInterest, fullName, company, companyEmail, phone, comments } =
+      req.body;
+
+    if (!areaOfInterest || !fullName || !companyEmail) {
+      return res.status(400).json({ message: "Required Fields are required" });
+    }
+
+    const newInquiry = await Inquiry.create({
+      areaOfInterest,
+      fullName,
+      company,
+      companyEmail,
+      phone,
+      comments,
+    });
+
+    res.status(201).json({
+      message: "Inquiry created Successfully",
+      inquiry: newInquiry,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      error: err.message,
+    });
+  }
+});
+
+export const getInquiryForm = asyncHandler(async (req, res) => {
+  try {
+    const inquiryForm = await Inquiry.find().sort({ createdAt: -1 });
+    return res.status(200).json({ message: "All Inquiry Form", inquiryForm });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
   }
 });

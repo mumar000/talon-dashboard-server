@@ -16,7 +16,9 @@ app.use(
   cors({
     origin: [
       "https://talon-admindashboard.netlify.app",
+      "https://userside-testing.netlify.app",
       "http://localhost:3080",
+      "http://localhost:3090",
     ],
     credentials: true,
   })

@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const InquirySchema = new mongoose.Schema(
   {
@@ -21,12 +21,12 @@ const InquirySchema = new mongoose.Schema(
       required: true,
       trim: true,
       lowercase: true,
-      validate: {
-        validator: (email) => {
-          return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(email);
-        },
-        message: "Please enter a valid email address",
-      },
+      // validate: {
+      //   validator: (email) => {
+      //     return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(email);
+      //   },
+      //   message: "Please enter a valid email address",
+      // },
     },
     phone: {
       type: String,
@@ -42,4 +42,5 @@ const InquirySchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("Inquiry", InquirySchema);
+const Inquiry = mongoose.model("Inquiry", InquirySchema);
+export default Inquiry;
