@@ -9,11 +9,11 @@ const protect = asyncHandler(async (req, res, next) => {
   let token;
 
   token = req.cookies.jwt;
+  // console.log(token);
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      
       req.user = await User.findById(decoded.userId).select("-password");
       if (!req.user) {
         req.admin = await Admin.findById(decoded.userId).select("-password");
