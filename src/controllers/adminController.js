@@ -1,7 +1,7 @@
 import generateToken from "../../utils/generateToken.js";
 import Admin from "../models/adminModel.js";
 import asyncHandler from "express-async-handler";
-
+import User from "../models/userModel.js";
 // @desc    Authenticate user and set JWT token
 // @route   POST /api/admin/auth
 //  @access  Public
@@ -67,7 +67,11 @@ export const registerAdmin = asyncHandler(async (req, res) => {
 // @route   GET /api/admin/profile
 //  @access  Private
 export const getAdminProfile = asyncHandler(async (req, res) => {
-  const admin = await Admin.find().sort({ createdAt: -1 });
+  const userId = req.user.id;
+  const admin = await Admin.findById(userId);
+  if (!admin) {
+    res.status(404).json({ message: "No admin Found" });
+  }
   res.status(200).json({
     status: true,
     message: "User Profile",
@@ -106,5 +110,24 @@ export const updateAdminProfile = asyncHandler(async (req, res) => {
     });
   } else {
     return res.status(404).json({ message: "User Not Found" });
+  }
+});
+
+export const getAllUsers = asyncHandler(async (req, res) => {
+  try {
+    const allUsers = await User.countDocuments();
+    if (allUsers === 0) {
+      res.status(400).send({ message: "No User found" });
+    }
+    return res.status(200).send({
+      message: "Total Users",
+      allUsers,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
   }
 });

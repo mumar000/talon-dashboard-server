@@ -80,8 +80,13 @@ export const logoutUser = asyncHandler(async (req, res) => {
 // @access  Private
 export const getUserProfile = asyncHandler(async (req, res) => {
   try {
-    const users = await User.find();
-    res.status(200).json({ users });
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      res.status(404).json({ message: "No Profile Founded" });
+    }
+    res.status(200).json({ user });
   } catch (error) {
     res.status(500).json({
       status: false,
