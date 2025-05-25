@@ -1,7 +1,11 @@
 import asyncHandler from "express-async-handler";
 import generateToken from "../../utils/generateToken.js";
 import User from "../models/userModel.js";
+import bulkUpload from "../models/bulkUploadModel.js";
+import SavedPicture from "../models/savedPictureModel.js";
+
 import Inquiry from "../models/inquiryModel.js";
+import { uploadToCloudinary } from "../middleware/uploadMiddleware.js";
 
 // @desc    Authenticate user and set JWT token
 // @route   POST /api/users/auth
@@ -101,7 +105,8 @@ export const getUserProfile = asyncHandler(async (req, res) => {
 // @access  Private
 export const updateUserProfile = asyncHandler(async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const userId = req.user.id;
+    const user = await User.findById(userId);
 
     if (user) {
       user.name = req.body.name || user.name;
@@ -127,6 +132,28 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
       message: "Inter Server Error",
       error: error.message,
     });
+  }
+});
+
+export const updateProfilePic = asyncHandler(async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+    if (!user) return res.status(400).json({ message: "User Not Found" });
+
+    const imageUrl = await uploadToCloudinary(
+      req.file.buffer,
+      "profile-pictures"
+    );
+
+    user.profilePic = imageUrl;
+    await user.save();
+    return res
+      .status(200)
+      .json({ msg: "Profile Picture Updated", profilePic: imageUrl });
+  } catch (error) {
+    console.error("Error uploading profile picture:", error.message);
+    res.status(500).json({ message: "Failed to update profile picture" });
   }
 });
 
@@ -169,5 +196,85 @@ export const getInquiryForm = asyncHandler(async (req, res) => {
     return res
       .status(500)
       .json({ message: "Internal Server Error", error: error.message });
+  }
+});
+
+export const savingPicture = asyncHandler(async (req, res) => {
+  try {
+    const { pictureUrl, bulkUploadId } = req.body;
+
+    if (!req.user?._id) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized - User not authenticated" });
+    }
+    const userId = req.user._id;
+
+    const bulkUploadDoc = await bulkUpload.findById(bulkUploadId);
+    if (!bulkUploadDoc) {
+      return res.status(404).json({ message: "Original document not found" });
+    }
+
+    if (!bulkUploadDoc.uploaded_Pictures.includes(pictureUrl)) {
+      return res
+        .status(400)
+        .json({ message: "Picture not found in the original document" });
+    }
+
+    const savedDoc = await SavedPicture.findOne({
+      user: userId,
+      originalBulkUpload: bulkUploadId,
+    });
+
+    if (savedDoc) {
+      if (savedDoc.pictureUrl.includes(pictureUrl)) {
+        return res.status(409).json({ message: "Picture Already Saved" });
+      }
+
+      savedDoc.pictureUrl.push(pictureUrl);
+      await savedDoc.save();
+      return res.status(200).json({
+        message: "Picture added to saved List",
+        data: savedDoc,
+      });
+    } else {
+      const newSavedPicture = await SavedPicture.create({
+        user: userId,
+        pictureUrl: [pictureUrl],
+        originalBulkUpload: bulkUploadId,
+        category: bulkUploadDoc.category,
+        type: bulkUploadDoc.type,
+      });
+
+      res.status(201).json({
+        success: true,
+        message: "Picture saved successfully",
+        data: newSavedPicture,
+      });
+    }
+  } catch (err) {
+    console.error("Error saving picture:", err);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
+  }
+});
+
+export const getSavedPictures = asyncHandler(async (req, res) => {
+  try {
+    const AllSavedPictures = await SavedPicture.find().sort({ createdAt: -1 });
+    if (!AllSavedPictures) {
+      return res.status(404).json({ msg: "Not Found Any Pictures" });
+    }
+    return res.status(200).json({
+      msg: "Saved Pictures",
+      pictures: AllSavedPictures,
+    });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ msg: "Internal Server Error", error: err.message });
   }
 });

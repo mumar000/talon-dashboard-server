@@ -1,6 +1,8 @@
 import asyncHandler from "express-async-handler";
 import bulkUpload from "../models/bulkUploadModel.js";
 import { uploadToCloudinary } from "../middleware/uploadMiddleware.js";
+import { picture } from "framer-motion/client";
+import User from "../models/userModel.js";
 export const uploadBulkPictures = asyncHandler(async (req, res) => {
   try {
     const files = req.files;
@@ -54,9 +56,12 @@ export const getPicturesByCategory = asyncHandler(async (req, res) => {
 
     if (pictures.length > 0) {
       const allPictures = pictures.flatMap((doc) => doc.uploaded_Pictures);
+
+      const bulkUploadId = pictures[0]._id;
       return res.status(200).json({
         status: true,
         message: `All Pictures of Category: ${category}`,
+        bulkUploadId,
         pictures: allPictures,
       });
     } else {

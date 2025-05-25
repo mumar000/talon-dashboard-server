@@ -65,4 +65,5 @@ const handleUploadError = (err, req, res, next) => {
 
 // Export the configured middleware
 export const uploadMultiple = upload.array("files", 70);
+export const uploadSingle = upload.single("file"); // "file" is the name of the field in your form
 export { uploadToCloudinary, handleUploadError };

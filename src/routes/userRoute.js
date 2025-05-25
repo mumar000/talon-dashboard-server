@@ -8,8 +8,12 @@ import {
   updateUserProfile,
   submitInquiry,
   getInquiryForm,
+  savingPicture,
+  getSavedPictures,
+  updateProfilePic,
 } from "../controllers/userController.js";
 import { protect } from "../middleware/authMiddleware.js";
+import { uploadSingle } from "../middleware/uploadMiddleware.js";
 
 router.post("/", registerUser);
 router.post("/auth", authUser);
@@ -20,4 +24,9 @@ router
   .route("/profile/:id")
   .get(protect, getUserProfile)
   .put(protect, updateUserProfile);
+
+router.post("/save-picture", protect, savingPicture);
+router.get("/get-savePics", protect, getSavedPictures);
+
+router.post("/profile/picture", protect, uploadSingle, updateProfilePic);
 export default router;
