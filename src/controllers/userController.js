@@ -264,17 +264,26 @@ export const savingPicture = asyncHandler(async (req, res) => {
 
 export const getSavedPictures = asyncHandler(async (req, res) => {
   try {
-    const AllSavedPictures = await SavedPicture.find().sort({ createdAt: -1 });
-    if (!AllSavedPictures) {
-      return res.status(404).json({ msg: "Not Found Any Pictures" });
+    const userId = req.user._id;
+
+    const pictures = await SavedPicture.find({ user: userId }).sort({
+      createdAt: -1,
+    });
+
+    if (!pictures) {
+      return res
+        .status(404)
+        .json({ message: "No Picture Found for this user" });
     }
+
     return res.status(200).json({
-      msg: "Saved Pictures",
-      pictures: AllSavedPictures,
+      status: true,
+      message: "Saved Picture of Users",
+      pictures,
     });
   } catch (err) {
     return res
       .status(500)
-      .json({ msg: "Internal Server Error", error: err.message });
+      .json({ message: "Internal Server Error", error: err.message });
   }
 });
