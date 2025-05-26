@@ -1,7 +1,6 @@
 import asyncHandler from "express-async-handler";
 import bulkUpload from "../models/bulkUploadModel.js";
 import { uploadToCloudinary } from "../middleware/uploadMiddleware.js";
-import { picture } from "framer-motion/client";
 import User from "../models/userModel.js";
 export const uploadBulkPictures = asyncHandler(async (req, res) => {
   try {
