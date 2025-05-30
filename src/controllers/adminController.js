@@ -1,5 +1,6 @@
 import generateToken from "../../utils/generateToken.js";
 import Admin from "../models/adminModel.js";
+import sendEmail from "../../utils/emailService.js";
 import asyncHandler from "express-async-handler";
 import User from "../models/userModel.js";
 // @desc    Authenticate user and set JWT token
@@ -33,31 +34,43 @@ export const authAdmin = asyncHandler(async (req, res) => {
 // @route   POST /api/admin/register
 //  @access  Public
 
-export const registerAdmin = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
+export const inviteAdmin = asyncHandler(async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    console.log("Request", req.body);
+    const adminExists = await Admin.findOne({ email });
+    if (adminExists) {
+      res.status(400).json({ message: "Email Already Registered" });
+    }
 
-  const adminExists = await Admin.findOne({ email });
-
-  if (adminExists) {
-    res.status(400).json({ message: "Email Already Registered" });
-  }
-
-  const admin = await Admin.create({
-    name,
-    email,
-    password,
-  });
-
-  if (admin) {
+    const admin = await Admin.create({
+      name,
+      email,
+      password,
+    });
+    console.log("EMail", email);
     generateToken(res, admin._id);
-    res.status(200).json({
+
+    const inviteLink = "https://userside-testing.netlify.app";
+
+    await sendEmail({
+      to: email,
+      subject: "You have been invited to the Admin Dashboard",
+      html: `
+        <h2>Hello ${name},</h2>
+        <p>You’ve been invited to the admin dashboard.</p>
+        <p>Click <a href="${inviteLink}">here</a> to login.</p>
+      `,
+    });
+
+    return res.status(201).json({
       message: "Registered Successfully",
       id: admin._id,
       name: admin.name,
       email: admin.email,
       role: "Admin",
     });
-  } else {
+  } catch (error) {
     res.status(400).json({ message: "Internal Server Error" });
     throw new Error("Server Error");
   }
@@ -67,16 +80,22 @@ export const registerAdmin = asyncHandler(async (req, res) => {
 // @route   GET /api/admin/profile
 //  @access  Private
 export const getAdminProfile = asyncHandler(async (req, res) => {
-  const userId = req.user.id;
-  const admin = await Admin.findById(userId);
-  if (!admin) {
-    res.status(404).json({ message: "No admin Found" });
+  try {
+    const userId = req.admin.id;
+    const admin = await Admin.findById(userId);
+    if (!admin) {
+      return res.status(404).json({ message: "No admin Found" });
+    }
+    res.status(200).json({
+      status: true,
+      message: "Admin Profile",
+      admin,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
   }
-  res.status(200).json({
-    status: true,
-    message: "User Profile",
-    admin,
-  });
 });
 
 export const logoutAdmin = asyncHandler(async (req, res) => {
