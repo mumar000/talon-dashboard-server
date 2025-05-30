@@ -11,7 +11,7 @@ import {
 } from "../controllers/adminController.js";
 
 router.post("/auth", authAdmin);
-router.post("/invite", inviteAdmin);
+router.post("/invite", protect, inviteAdmin);
 router.post("/logout", logoutAdmin);
 //Private Routes
 router

@@ -40,7 +40,7 @@ export const inviteAdmin = asyncHandler(async (req, res) => {
     console.log("Request", req.body);
     const adminExists = await Admin.findOne({ email });
     if (adminExists) {
-      res.status(400).json({ message: "Email Already Registered" });
+      return res.status(400).json({ message: "Email Already Registered" });
     }
 
     const admin = await Admin.create({
@@ -48,7 +48,7 @@ export const inviteAdmin = asyncHandler(async (req, res) => {
       email,
       password,
     });
-    console.log("Email", email);
+
     generateToken(res, admin._id);
 
     const inviteLink = "talon-admindashboard.netlify.app";
@@ -154,8 +154,9 @@ export const inviteAdmin = asyncHandler(async (req, res) => {
       role: "Admin",
     });
   } catch (error) {
-    res.status(400).json({ message: "Internal Server Error" });
-    throw new Error("Server Error");
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
   }
 });
 
