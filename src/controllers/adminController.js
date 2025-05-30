@@ -48,19 +48,102 @@ export const inviteAdmin = asyncHandler(async (req, res) => {
       email,
       password,
     });
-    console.log("EMail", email);
+    console.log("Email", email);
     generateToken(res, admin._id);
 
-    const inviteLink = "https://userside-testing.netlify.app";
+    const inviteLink = "talon-admindashboard.netlify.app";
 
     await sendEmail({
       to: email,
       subject: "You have been invited to the Admin Dashboard",
       html: `
-        <h2>Hello ${name},</h2>
-        <p>You’ve been invited to the admin dashboard.</p>
-        <p>Click <a href="${inviteLink}">here</a> to login.</p>
-      `,
+      <!DOCTYPE html>
+      <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <title>Dashboard Invitation</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          background-color: #f4f6f8;
+          margin: 0;
+          padding: 0;
+          color: #2c3e50;
+        }
+        .email-container {
+          max-width: 600px;
+          margin: auto;
+          background-color: #ffffff;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+          background-color: #1e293b;
+          padding: 20px;
+          text-align: center;
+        }
+        .header img {
+          height: 50px;
+        }
+        .content {
+          padding: 30px;
+        }
+        .content h2 {
+          color: #1e293b;
+        }
+        .content p {
+          font-size: 16px;
+          line-height: 1.5;
+        }
+        .credentials {
+          background-color: #f1f5f9;
+          padding: 15px;
+          border-radius: 6px;
+          margin: 20px 0;
+          font-family: monospace;
+        }
+        .button {
+          display: inline-block;
+          padding: 12px 20px;
+          background-color: #3b82f6;
+          color: white;
+          text-decoration: none;
+          border-radius: 6px;
+          font-weight: bold;
+        }
+        .footer {
+          text-align: center;
+          padding: 20px;
+          background-color: #f9fafb;
+          font-size: 14px;
+          color: #6b7280;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="email-container">
+        <div class="header">
+          <img src="https://taloninternational.com/wp-content/themes/talon/assets/build/images/footer-logo.png" alt="Talon Logo" />
+        </div>
+        <div class="content">
+          <h2>Hello ${name},</h2>
+          <p>You’ve been invited to access the admin dashboard.</p>
+          <p>Here are your login credentials:</p>
+          <div class="credentials">
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Password:</strong> ${password}</p>
+          </div>
+          <p>Click the button below to log in:</p>
+          <p><a class="button" href="${inviteLink}">Access Dashboard</a></p>
+        </div>
+        <div class="footer">
+          &copy; ${new Date().getFullYear()} Talon International. All rights reserved.
+        </div>
+      </div>
+    </body>
+  </html>
+  `,
     });
 
     return res.status(201).json({
