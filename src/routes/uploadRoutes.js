@@ -2,6 +2,10 @@ import {
   uploadBulkPictures,
   getAllPictures,
   getPicturesByCategory,
+  addCategory,
+  getCategories,
+  updateCategory,
+  deleteCategories,
 } from "../controllers/bulkUploadController.js";
 import {
   uploadMultiple,
@@ -9,6 +13,12 @@ import {
 } from "../middleware/uploadMiddleware.js";
 import express from "express";
 const router = express.Router();
+
+//Categories
+router.post("/category/create", addCategory);
+router.get("/category", getCategories);
+router.put("/category/update/:id", updateCategory);
+router.delete("/category/delete/:id", deleteCategories);
 
 router.post(
   "/upload-pictures",

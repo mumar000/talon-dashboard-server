@@ -1,7 +1,7 @@
 import asyncHandler from "express-async-handler";
 import generateToken from "../../utils/generateToken.js";
 import User from "../models/userModel.js";
-import bulkUpload from "../models/bulkUploadModel.js";
+import { bulkUpload } from "../models/bulkUploadModel.js";
 import SavedPicture from "../models/savedPictureModel.js";
 
 import Inquiry from "../models/inquiryModel.js";
@@ -135,6 +135,9 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
   }
 });
 
+//@desc     Update user Avatar
+// @route   PUT /api/users/profile
+// @access  Private
 export const updateProfilePic = asyncHandler(async (req, res) => {
   try {
     const userId = req.user._id;
@@ -157,6 +160,9 @@ export const updateProfilePic = asyncHandler(async (req, res) => {
   }
 });
 
+//@desc     Submit Inquiry Form
+// @route   POST /api/users/submitInquiry
+// @access  Private
 export const submitInquiry = asyncHandler(async (req, res) => {
   try {
     const { areaOfInterest, fullName, company, companyEmail, phone, comments } =
@@ -188,6 +194,9 @@ export const submitInquiry = asyncHandler(async (req, res) => {
   }
 });
 
+//@desc     Detail of all Inquiry Form
+// @route   GET /api/users/getInquiry
+// @access  Private
 export const getInquiryForm = asyncHandler(async (req, res) => {
   try {
     const inquiryForm = await Inquiry.find().sort({ createdAt: -1 });
@@ -199,6 +208,9 @@ export const getInquiryForm = asyncHandler(async (req, res) => {
   }
 });
 
+//@desc    save picture for all user
+// @route   POST /api/users/save-picture
+// @access  Private
 export const savingPicture = asyncHandler(async (req, res) => {
   try {
     const { pictureUrl, bulkUploadId } = req.body;
@@ -262,6 +274,9 @@ export const savingPicture = asyncHandler(async (req, res) => {
   }
 });
 
+//@desc    get All pictures of all users
+// @route   GET /api/users/getSavePics
+// @access  Private
 export const getSavedPictures = asyncHandler(async (req, res) => {
   try {
     const userId = req.user._id;
@@ -270,7 +285,7 @@ export const getSavedPictures = asyncHandler(async (req, res) => {
       createdAt: -1,
     });
 
-    if (!pictures) {
+    if (pictures.length === 0) {
       return res
         .status(404)
         .json({ message: "No Picture Found for this user" });
@@ -278,12 +293,13 @@ export const getSavedPictures = asyncHandler(async (req, res) => {
 
     return res.status(200).json({
       status: true,
-      message: "Saved Picture of Users",
+      message: "Saved Pictures of User",
       pictures,
     });
   } catch (err) {
-    return res
-      .status(500)
-      .json({ message: "Internal Server Error", error: err.message });
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: err.message,
+    });
   }
 });

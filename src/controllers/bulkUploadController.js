@@ -1,11 +1,85 @@
 import asyncHandler from "express-async-handler";
-import bulkUpload from "../models/bulkUploadModel.js";
+import { Category, bulkUpload } from "../models/bulkUploadModel.js";
 import { uploadToCloudinary } from "../middleware/uploadMiddleware.js";
 import User from "../models/userModel.js";
+
+export const addCategory = asyncHandler(async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ message: "Please enter Category Name" });
+    }
+    const newCategory = new Category({ name });
+    await newCategory.save();
+
+    return res.status(201).json({
+      message: "Category Created Successfully",
+      category: newCategory,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+});
+
+export const getCategories = asyncHandler(async (req, res) => {
+  try {
+    const allCategories = await Category.find().sort({ createdAt: -1 });
+    return res
+      .status(200)
+      .json({ message: "Categories", categories: allCategories });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
+});
+
+export const updateCategory = asyncHandler(async (req, res) => {
+  try {
+    const categoryId = req.params.id;
+    const category = await Category.findById(categoryId);
+
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    // Update the name if provided
+    category.name = req.body.name || category.name;
+
+    const updatedCategory = await category.save();
+
+    return res.status(200).json({
+      message: "Category updated successfully",
+      name: updatedCategory.name,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+});
+
+export const deleteCategories = asyncHandler(async (req, res) => {
+  try {
+    const categoryId = req.params.id;
+    const deleteCategory = await Category.findByIdAndDelete(categoryId);
+    return res.status(200).json({ message: "Category Delete Successfully" });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+});
+
 export const uploadBulkPictures = asyncHandler(async (req, res) => {
   try {
     const files = req.files;
-    if (!files || files === 0) {
+    if (!files || files.length === 0) {
       return res.status(400).json({ message: "No File Uploaded" });
     }
 
@@ -15,16 +89,20 @@ export const uploadBulkPictures = asyncHandler(async (req, res) => {
     );
 
     const uploadedUrls = await Promise.all(uploadPromises);
+    const existingDoc = await bulkUpload.findOne({ category });
 
-    let uploadedPic;
+    if (existingDoc) {
+      existingDoc.uploaded_Pictures.push(...uploadedUrls);
+      await existingDoc.save();
+    } else {
+      const uploadedPic = new bulkUpload({
+        category,
+        type,
+        uploaded_Pictures: uploadedUrls,
+      });
 
-    uploadedPic = new bulkUpload({
-      category,
-      type,
-      uploaded_Pictures: uploadedUrls,
-    });
-
-    await uploadedPic.save();
+      await uploadedPic.save();
+    }
 
     return res.status(200).json({
       status: true,
