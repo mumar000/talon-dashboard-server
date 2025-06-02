@@ -8,7 +8,9 @@ import {
   logoutAdmin,
   getAllUsers,
   inviteAdmin,
+  updateAvatar,
 } from "../controllers/adminController.js";
+import { uploadSingle } from "../middleware/uploadMiddleware.js";
 
 router.post("/auth", authAdmin);
 router.post("/invite", protect, inviteAdmin);
@@ -18,6 +20,7 @@ router
   .route("/profile")
   .get(protect, getAdminProfile)
   .put(protect, updateAdminProfile);
+router.post("/avatar", protect, uploadSingle, updateAvatar);
 router.get("/getUsers", protect, getAllUsers);
 
 export default router;

@@ -3,6 +3,7 @@ import Admin from "../models/adminModel.js";
 import sendEmail from "../../utils/emailService.js";
 import asyncHandler from "express-async-handler";
 import User from "../models/userModel.js";
+import { uploadToCloudinary } from "../middleware/uploadMiddleware.js";
 // @desc    Authenticate user and set JWT token
 // @route   POST /api/admin/auth
 //  @access  Public
@@ -19,6 +20,7 @@ export const authAdmin = asyncHandler(async (req, res) => {
         name: admin.name,
         email: admin.email,
         role: admin.role,
+        avatar: admin.avatar,
       });
     } else {
       res.status(401).json({ message: "Invalid Email and Password" });
@@ -213,6 +215,37 @@ export const updateAdminProfile = asyncHandler(async (req, res) => {
     });
   } else {
     return res.status(404).json({ message: "User Not Found" });
+  }
+});
+
+export const updateAvatar = asyncHandler(async (req, res) => {
+  try {
+    const adminId = req.admin._id;
+    const admin = await Admin.findById(adminId);
+
+    const avatarUrl = await uploadToCloudinary(
+      req.file.buffer,
+      "profile-pictures"
+    );
+
+    admin.avatar = avatarUrl;
+    await admin.save();
+    return res
+      .status(200)
+      .json({
+        message: "Profile Picture updated successfully",
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role,
+        avatar: admin.avatar,
+      });
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
   }
 });
 
