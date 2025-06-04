@@ -66,8 +66,13 @@ export const updateCategory = asyncHandler(async (req, res) => {
 export const deleteCategories = asyncHandler(async (req, res) => {
   try {
     const categoryId = req.params.id;
-    const deleteCategory = await Category.findByIdAndDelete(categoryId);
-    return res.status(200).json({ message: "Category Delete Successfully" });
+    const deleteCategory = await bulkUpload.findByIdAndDelete(categoryId);
+    return res
+      .status(200)
+      .json({
+        message: "Category Delete Successfully",
+        delete: deleteCategory,
+      });
   } catch (error) {
     return res.status(500).json({
       message: "Internal Server Error",
