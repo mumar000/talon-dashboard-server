@@ -3,14 +3,14 @@ import { v2 as cloudinary } from "cloudinary";
 import dotenv from "dotenv";
 import streamifier from "streamifier";
 
-dotenv.config();
+// dotenv.config();
 
-// Cloudinary configuration
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUD_API_KEY,
-  api_secret: process.env.CLOUD_API_SECRET,
-});
+// // Cloudinary configuration
+// cloudinary.config({
+//   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+//   api_key: process.env.CLOUD_API_KEY,
+//   api_secret: process.env.CLOUD_API_SECRET,
+// });
 
 // Memory storage for file buffers
 const storage = multer.memoryStorage();
@@ -55,6 +55,26 @@ const handleUploadError = (err, req, res, next) => {
     return res.status(500).json({
       message: err.message || "An unexpected error occurred during the upload.",
     });
+  }
+};
+
+export const extractPublicId = (imageUrl) => {
+  try {
+    const parts = imageUrl.split("/");
+    const fileName = parts[parts.length - 1];
+    const folder = parts[parts.length - 2];
+    const publicId = `${folder}/${fileName.split(".")[0]}`;
+    return publicId;
+  } catch (error) {
+    return null;
+  }
+};
+
+export const deleteFromCloudinary = async (publicId) => {
+  try {
+    cloudinary.uploader.destroy(publicId);
+  } catch (error) {
+    console.log("Error Deleting Images", error.message);
   }
 };
 

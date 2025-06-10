@@ -1,7 +1,7 @@
 import asyncHandler from "express-async-handler";
 import generateToken from "../../utils/generateToken.js";
 import User from "../models/userModel.js";
-import { bulkUpload } from "../models/bulkUploadModel.js";
+// import { bulkUpload } from "../models/bulkUploadModel.js";
 import SavedPicture from "../models/savedPictureModel.js";
 
 import Inquiry from "../models/inquiryModel.js";

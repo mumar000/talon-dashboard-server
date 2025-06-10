@@ -1,24 +1,25 @@
 import mongoose from "mongoose";
 
+const typeSchema = mongoose.Schema({
+  type: { type: String, required: true },
+  uploaded_Pictures: [{ type: String, required: true }],
+});
+
 const categorySchema = mongoose.Schema(
   {
-    name: { type: String, required: true },
+    name: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    types: [typeSchema],
   },
   {
     timestamps: true,
   }
 );
 
-const bulkUploadSchema = mongoose.Schema(
-  {
-    category: { type: String },
-    type: { type: String },
-    uploaded_Pictures: [{ type: String, required: true }],
-  },
-  {
-    timestamps: true,
-  }
-);
+// export const bulkUpload = mongoose.model("bulkUpload", bulkUploadSchema);
+// export const Category = mongoose.model("Category", categorySchema);
 
-export const bulkUpload = mongoose.model("bulkUpload", bulkUploadSchema);
 export const Category = mongoose.model("Category", categorySchema);
