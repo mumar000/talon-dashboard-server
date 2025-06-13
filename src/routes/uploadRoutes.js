@@ -4,7 +4,9 @@ import {
   // getPicturesByCategory,
   addCategory,
   deleteCategoryWthPics,
+  deleteSingleImage,
   getAllPictures,
+  getTotalPictues,
   updateCategoryName,
   uploadPictures,
   // getCategories,
@@ -22,6 +24,7 @@ const router = express.Router();
 router.post("/category/create", addCategory);
 router.put("/:categoryId", updateCategoryName);
 router.delete("/:categoryId", deleteCategoryWthPics);
+router.delete("/:categoryId/delete-img", deleteSingleImage);
 
 // router.get("/category", getCategories);
 // router.put("/category/update/:id", updateCategory);
@@ -32,6 +35,8 @@ router.post(
   handleUploadError,
   uploadPictures
 );
+
+router.get("/total-pics", getTotalPictues);
 // router.post(
 //   "/upload-pictures",
 //   uploadMultiple,

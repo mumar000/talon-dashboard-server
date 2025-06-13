@@ -13,6 +13,10 @@ const categorySchema = mongoose.Schema(
       unique: true,
     },
     types: [typeSchema],
+    totalUploadPics: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,

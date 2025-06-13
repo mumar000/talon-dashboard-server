@@ -234,7 +234,15 @@ export const uploadPictures = asyncHandler(async (req, res) => {
     );
 
     const uploaded_Pictures = await Promise.all(uploadPromises);
-    category.types.push({ type, uploaded_Pictures });
+    category.totalUploadPics =
+      (category.totalUploadPics || 0) + uploaded_Pictures.length;
+    const existingType = category.types.find((t) => t.type === type);
+
+    if (existingType) {
+      existingType.uploaded_Pictures.push(...uploaded_Pictures);
+    } else {
+      category.types.push({ type, uploaded_Pictures });
+    }
     await category.save();
 
     return res
@@ -251,7 +259,7 @@ export const uploadPictures = asyncHandler(async (req, res) => {
 export const getAllPictures = asyncHandler(async (req, res) => {
   try {
     const categories = await Category.find().sort({ createdAt: -1 }); // newest first
-    res.status(200).json(categories);
+    res.status(200).json({ message: "All Categories", category: categories });
   } catch (error) {
     res.status(500).json({
       message: "Failed to fetch categories",
@@ -323,5 +331,66 @@ export const deleteCategoryWthPics = asyncHandler(async (req, res) => {
       message: "Failed to Delete Category",
       error: error.message,
     });
+  }
+});
+
+export const deleteSingleImage = asyncHandler(async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    const { imageUrl } = req.body;
+
+    const category = await Category.findById(categoryId);
+    if (!category) {
+      return res.status(404).json({ message: "Category Not Found" });
+    }
+
+    let imageFound = false;
+
+    for (const type of category.types) {
+      const index = type.uploaded_Pictures.indexOf(imageUrl);
+      if (index !== -1) {
+        const publicId = extractPublicId(imageUrl);
+        if (publicId) {
+          await deleteFromCloudinary(publicId);
+        }
+        type.uploaded_Pictures.splice(index, 1);
+        imageFound = true;
+        break;
+      }
+    }
+    if (!imageFound) {
+      return res
+        .status(400)
+        .json({ message: "Image not found in this category" });
+    }
+
+    await category.save();
+
+    return res.status(200).json({ message: "Image Deleted Successfully" });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to delete image",
+      error: error.message,
+    });
+  }
+});
+
+export const getTotalPictues = asyncHandler(async (req, res) => {
+  try {
+    const result = await Category.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalPictures: { $sum: "$totalUploadPics" },
+        },
+      },
+    ]);
+
+    const total = result[0]?.totalPictures || 0;
+    return res.status(200).json({ totalPictures: total });
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: "Image not found in this category" });
   }
 });
