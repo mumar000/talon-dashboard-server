@@ -6,6 +6,7 @@ import {
   deleteCategoryWthPics,
   deleteSingleImage,
   getAllPictures,
+  getCategorySlug,
   getTotalPictues,
   updateCategoryName,
   uploadPictures,
@@ -37,6 +38,8 @@ router.post(
 );
 
 router.get("/total-pics", getTotalPictues);
+router.get("/getPictures", getAllPictures);
+router.get("/getCategory/:slug", getCategorySlug);
 // router.post(
 //   "/upload-pictures",
 //   uploadMultiple,
@@ -44,6 +47,5 @@ router.get("/total-pics", getTotalPictues);
 //   uploadBulkPictures
 // );
 // router.get("/pictures/:category", getPicturesByCategory);
-router.get("/getPictures", getAllPictures);
 
 export default router;

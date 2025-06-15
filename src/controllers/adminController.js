@@ -230,16 +230,14 @@ export const updateAvatar = asyncHandler(async (req, res) => {
 
     admin.avatar = avatarUrl;
     await admin.save();
-    return res
-      .status(200)
-      .json({
-        message: "Profile Picture updated successfully",
-        id: admin._id,
-        name: admin.name,
-        email: admin.email,
-        role: admin.role,
-        avatar: admin.avatar,
-      });
+    return res.status(200).json({
+      message: "Profile Picture updated successfully",
+      id: admin._id,
+      name: admin.name,
+      email: admin.email,
+      role: admin.role,
+      avatar: admin.avatar,
+    });
   } catch (error) {
     res.status(500).json({
       status: false,

@@ -8,6 +8,7 @@ import {
   extractPublicId,
 } from "../services/cloudinary.js";
 import pLimit from "p-limit";
+import slugify from "slugify";
 
 // export const addCategory = asyncHandler(async (req, res) => {
 //   try {
@@ -192,14 +193,15 @@ import pLimit from "p-limit";
 export const addCategory = asyncHandler(async (req, res) => {
   try {
     const { name } = req.body;
+    const slug = slugify(name, { lower: true });
+
     const existingCategory = await Category.findOne({ name });
 
     if (existingCategory) {
       return res.status(400).json({ message: "Category Already Exists" });
     }
 
-    const newCategory = new Category({ name });
-    await newCategory.save();
+    const newCategory = await Category.create({ name, slug });
 
     return res.status(201).json({
       message: "Category Created Successfully",
@@ -392,5 +394,23 @@ export const getTotalPictues = asyncHandler(async (req, res) => {
     return res
       .status(400)
       .json({ message: "Image not found in this category" });
+  }
+});
+
+export const getCategorySlug = asyncHandler(async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    const category = await Category.findOne({ slug });
+    if (!category) {
+      return res.status(404).json({ message: "No category found" });
+    }
+
+    return res.status(200).json({ status: true, allDetail: category });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to delete image",
+      error: error.message,
+    });
   }
 });

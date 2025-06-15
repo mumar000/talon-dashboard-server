@@ -11,6 +11,7 @@ import {
   savingPicture,
   getSavedPictures,
   updateProfilePic,
+  unsavePicture,
 } from "../controllers/userController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { uploadSingle } from "../middleware/uploadMiddleware.js";
@@ -27,6 +28,6 @@ router
 
 router.post("/save-picture", protect, savingPicture);
 router.get("/get-savePics", protect, getSavedPictures);
-
+router.post("/unsave-picture", protect, unsavePicture);
 router.post("/profile/picture", protect, uploadSingle, updateProfilePic);
 export default router;

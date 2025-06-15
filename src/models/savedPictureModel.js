@@ -21,10 +21,10 @@ const SavedPictureSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
-  type: {
-    type: String,
-    required: false,
-  },
+  //   type: {
+  //     type: String,
+  //     required: false,
+  //   },
   savedAt: {
     type: Date,
     default: Date.now(),

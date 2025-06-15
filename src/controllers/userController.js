@@ -6,6 +6,7 @@ import SavedPicture from "../models/savedPictureModel.js";
 
 import Inquiry from "../models/inquiryModel.js";
 import { uploadToCloudinary } from "../middleware/uploadMiddleware.js";
+import { Category } from "../models/bulkUploadModel.js";
 
 // @desc    Authenticate user and set JWT token
 // @route   POST /api/users/auth
@@ -213,7 +214,7 @@ export const getInquiryForm = asyncHandler(async (req, res) => {
 // @access  Private
 export const savingPicture = asyncHandler(async (req, res) => {
   try {
-    const { pictureUrl, bulkUploadId } = req.body;
+    const { pictureUrl, categoryId } = req.body;
 
     if (!req.user?._id) {
       return res
@@ -222,20 +223,22 @@ export const savingPicture = asyncHandler(async (req, res) => {
     }
     const userId = req.user._id;
 
-    const bulkUploadDoc = await bulkUpload.findById(bulkUploadId);
-    if (!bulkUploadDoc) {
+    const categoryDoc = await Category.findById(categoryId);
+    if (!categoryDoc) {
       return res.status(404).json({ message: "Original document not found" });
     }
 
-    if (!bulkUploadDoc.uploaded_Pictures.includes(pictureUrl)) {
-      return res
-        .status(400)
-        .json({ message: "Picture not found in the original document" });
+    for (const type of categoryDoc.types) {
+      for (const image of type.uploaded_Pictures) {
+        if (!type || !image) {
+          return res.status(404).json({ message: "No Image Found" });
+        }
+      }
     }
 
     const savedDoc = await SavedPicture.findOne({
       user: userId,
-      originalBulkUpload: bulkUploadId,
+      originalBulkUpload: categoryId,
     });
 
     if (savedDoc) {
@@ -253,9 +256,8 @@ export const savingPicture = asyncHandler(async (req, res) => {
       const newSavedPicture = await SavedPicture.create({
         user: userId,
         pictureUrl: [pictureUrl],
-        originalBulkUpload: bulkUploadId,
-        category: bulkUploadDoc.category,
-        type: bulkUploadDoc.type,
+        originalBulkUpload: categoryId,
+        category: categoryDoc.name,
       });
 
       res.status(201).json({
@@ -274,6 +276,35 @@ export const savingPicture = asyncHandler(async (req, res) => {
   }
 });
 
+export const unsavePicture = asyncHandler(async (req, res) => {
+  try {
+    const { pictureUrl, categoryId } = req.body;
+
+    const savedDoc = await SavedPicture.findOne({
+      originalBulkUpload: categoryId,
+    });
+
+    if (!savedDoc) {
+      return res.status(400).json({ message: "Document Not Found" });
+    }
+    if (!savedDoc.pictureUrl.includes(pictureUrl)) {
+      return res.status(400).json({ message: "Picture Not Found" });
+    }
+
+    savedDoc.pictureUrl = savedDoc.pictureUrl.filter(
+      (url) => url !== pictureUrl
+    );
+    await savedDoc.save();
+
+    return res.status(200).json({ message: "Picture Unsave Successully" });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
+  }
+});
 //@desc    get All pictures of all users
 // @route   GET /api/users/getSavePics
 // @access  Private
