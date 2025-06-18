@@ -2,6 +2,7 @@ import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
 import dotenv from "dotenv";
 import streamifier from "streamifier";
+import pLimit from "p-limit"; // For concurrency control
 
 dotenv.config();
 
@@ -17,30 +18,50 @@ const storage = multer.memoryStorage();
 const upload = multer({
   storage,
   limits: {
-    files: 70, // Limit to 70 files at once
+    files: 70, // Max 70 files
+    fileSize: 10 * 1024 * 1024, // 10MB per file
   },
 });
 
 /**
- * Upload file buffer to Cloudinary using a stream
+ * Optimized Cloudinary upload with concurrency control
+ * @param {Buffer} buffer - File buffer
+ * @param {string} folder - Cloudinary folder
+ * @param {number} retries - Max retry attempts (default: 2)
  */
-const uploadToCloudinary = (buffer, folder = "uploads") => {
-  return new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        folder,
-        resource_type: "auto",
-      },
-      (error, result) => {
-        if (result) {
-          resolve(result.secure_url);
-        } else {
-          reject(error);
-        }
+const uploadToCloudinary = async (buffer, folder = "uploads", retries = 2) => {
+  const limit = pLimit(10); // Upload 10 files at a time (Cloudinary's optimal concurrency)
+
+  const uploadWithRetry = async (attempt = 0) => {
+    try {
+      return await limit(
+        () =>
+          new Promise((resolve, reject) => {
+            const uploadStream = cloudinary.uploader.upload_stream(
+              {
+                folder,
+                resource_type: "auto",
+                quality: "auto:good", // Smart compression
+                fetch_format: "auto", // Converts to WebP if possible
+              },
+              (error, result) => {
+                if (error) reject(error);
+                else resolve(result.secure_url);
+              }
+            );
+            streamifier.createReadStream(buffer).pipe(uploadStream);
+          })
+      );
+    } catch (error) {
+      if (attempt < retries) {
+        console.warn(`Retrying upload (attempt ${attempt + 1})`);
+        return uploadWithRetry(attempt + 1);
       }
-    );
-    streamifier.createReadStream(buffer).pipe(uploadStream);
-  });
+      throw error;
+    }
+  };
+
+  return uploadWithRetry();
 };
 
 /**
@@ -50,20 +71,20 @@ const handleUploadError = (err, req, res, next) => {
   if (!err) return next();
   if (err.code === "LIMIT_FILE_COUNT") {
     return res.status(400).json({
-      message: "Too many file uploads, please check the limits",
+      message: "Maximum 70 files allowed per upload.",
     });
   } else if (err.code === "LIMIT_FILE_SIZE") {
     return res.status(400).json({
-      message: "File size is too large, max limit is 10MB per file",
+      message: "File size exceeds 10MB limit.",
     });
   } else {
     return res.status(500).json({
-      message: err.message || "An unexpected error occurred during the upload.",
+      message: err.message || "Upload failed. Please try again.",
     });
   }
 };
 
 // Export the configured middleware
 export const uploadMultiple = upload.array("files", 70);
-export const uploadSingle = upload.single("file"); // "file" is the name of the field in your form
+export const uploadSingle = upload.single("file");
 export { uploadToCloudinary, handleUploadError };

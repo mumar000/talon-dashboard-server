@@ -218,41 +218,75 @@ export const addCategory = asyncHandler(async (req, res) => {
 export const uploadPictures = asyncHandler(async (req, res) => {
   try {
     const files = req.files;
-    if (!files || files.length === 0) {
-      return res.status(400).json({ messgae: "Please Upload Files" });
+    if (!files?.length) {
+      return res.status(400).json({ message: "No files uploaded." });
     }
 
     const { categoryId, type } = req.body;
 
+    // 1. Find category
     const category = await Category.findById(categoryId);
-    if (!category)
-      return res.status(400).json({ message: "Category Not Found" });
-    const limit = pLimit(10);
+    if (!category) {
+      return res.status(404).json({ message: "Category not found." });
+    }
 
-    const uploadPromises = files.map((file) =>
-      limit(async () => {
-        return uploadToCloudinary(file.buffer, "bulk_uploads");
-      })
+    // 2. Upload in optimized batches
+    const CONCURRENT_UPLOADS = 10;
+    const limit = pLimit(CONCURRENT_UPLOADS);
+    const uploadedUrls = [];
+
+    for (let i = 0; i < files.length; i += CONCURRENT_UPLOADS) {
+      const batch = files.slice(i, i + CONCURRENT_UPLOADS);
+      const batchResults = await Promise.all(
+        batch.map((file) =>
+          limit(() =>
+            uploadToCloudinary(file.buffer, "bulk_uploads").catch((e) => {
+              console.warn(`Failed upload: ${e.message}`);
+              return null;
+            })
+          )
+        )
+      );
+      uploadedUrls.push(...batchResults.filter((url) => url));
+    }
+
+    // 3. Prepare update operation
+    const update = {
+      $inc: { totalUploadPics: uploadedUrls.length },
+      $set: { updatedAt: new Date() },
+    };
+
+    // Check if type exists
+    const typeIndex = category.types.findIndex((t) => t.type === type);
+
+    if (typeIndex >= 0) {
+      // Type exists - push to existing array
+      update.$push = {
+        [`types.${typeIndex}.uploaded_Pictures`]: { $each: uploadedUrls },
+      };
+    } else {
+      // Type doesn't exist - create new type
+      update.$push = {
+        types: { type, uploaded_Pictures: uploadedUrls },
+      };
+    }
+
+    // 4. Execute update
+    const updatedCategory = await Category.findByIdAndUpdate(
+      categoryId,
+      update,
+      { new: true }
     );
 
-    const uploaded_Pictures = await Promise.all(uploadPromises);
-    category.totalUploadPics =
-      (category.totalUploadPics || 0) + uploaded_Pictures.length;
-    const existingType = category.types.find((t) => t.type === type);
-
-    if (existingType) {
-      existingType.uploaded_Pictures.push(...uploaded_Pictures);
-    } else {
-      category.types.push({ type, uploaded_Pictures });
-    }
-    await category.save();
-
-    return res
-      .status(201)
-      .json({ message: "Pictures Uploaded Sucessfully", category });
+    return res.status(200).json({
+      success: true,
+      message: `${uploadedUrls.length}/${files.length} images uploaded.`,
+      category: updatedCategory,
+    });
   } catch (error) {
+    console.error("Upload error:", error);
     return res.status(500).json({
-      message: "Internal Server Error",
+      message: "Upload failed. Please try again.",
       error: error.message,
     });
   }
