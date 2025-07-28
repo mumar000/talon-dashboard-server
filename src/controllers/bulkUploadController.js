@@ -28,7 +28,6 @@ export const addCategory = asyncHandler(async (req, res) => {
     const cardImgUrl = await uploadToCloudinary(cardImgBuffer, "cardImg")
     const bannerImgUrl = await uploadToCloudinary(bannerImgBuffer, "bannerImg")
    
-
     const slug = slugify(name, { lower: true });
 
     const existingCategory = await Category.findOne({ name });  
