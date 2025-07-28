@@ -31,7 +31,7 @@ export const addCategory = asyncHandler(async (req, res) => {
 
     const slug = slugify(name, { lower: true });
 
-    const existingCategory = await Category.findOne({ name });
+    const existingCategory = await Category.findOne({ name });  
 
     if (existingCategory) {
       return res.status(400).json({ message: "Category Already Exists" });
