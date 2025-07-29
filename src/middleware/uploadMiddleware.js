@@ -87,4 +87,8 @@ const handleUploadError = (err, req, res, next) => {
 // Export the configured middleware
 export const uploadMultiple = upload.array("files", 70);
 export const uploadSingle = upload.single("file");
+export const uploadCategoryImages = upload.fields([
+  { name: "cardImg", maxCount: 1 },
+  { name: "bannerImg", maxCount: 1 },
+]);
 export { uploadToCloudinary, handleUploadError };

@@ -153,7 +153,7 @@ export const inviteAdmin = asyncHandler(async (req, res) => {
       id: admin._id,
       name: admin.name,
       email: admin.email,
-      role: "Admin",
+      role: "Master",
     });
   } catch (error) {
     res

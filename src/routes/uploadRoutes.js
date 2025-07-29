@@ -17,19 +17,17 @@ import {
 import {
   uploadMultiple,
   handleUploadError,
+  uploadCategoryImages,
 } from "../middleware/uploadMiddleware.js";
 import express from "express";
 const router = express.Router();
 
 //Categories
-router.post("/category/create", addCategory);
+router.post("/category/create", uploadCategoryImages, addCategory);
 router.put("/:categoryId", updateCategoryName);
 router.delete("/:categoryId", deleteCategoryWthPics);
 router.delete("/:categoryId/delete-img", deleteSingleImage);
 
-// router.get("/category", getCategories);
-// router.put("/category/update/:id", updateCategory);
-// router.delete("/category/delete/:id", deleteCategories);
 router.post(
   "/upload-pictures",
   uploadMultiple,

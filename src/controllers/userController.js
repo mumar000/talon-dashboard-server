@@ -280,6 +280,8 @@ export const unsavePicture = asyncHandler(async (req, res) => {
   try {
     const { pictureUrl, categoryId } = req.body;
 
+    const cleanUrl = (url) => decodeURIComponent(url).split("?")[0];
+
     const savedDoc = await SavedPicture.findOne({
       originalBulkUpload: categoryId,
     });
@@ -287,17 +289,25 @@ export const unsavePicture = asyncHandler(async (req, res) => {
     if (!savedDoc) {
       return res.status(400).json({ message: "Document Not Found" });
     }
-    if (!savedDoc.pictureUrl.includes(pictureUrl)) {
+
+    const incomingUrl = cleanUrl(pictureUrl);
+
+    const exists = savedDoc.pictureUrl.some(
+      (url) => cleanUrl(url) === incomingUrl
+    );
+
+    if (!exists) {
       return res.status(400).json({ message: "Picture Not Found" });
     }
 
     savedDoc.pictureUrl = savedDoc.pictureUrl.filter(
-      (url) => url !== pictureUrl
+      (url) => cleanUrl(url) !== incomingUrl
     );
+
     await savedDoc.save();
 
-    return res.status(200).json({ message: "Picture Unsave Successully" });
-  } catch (error) {
+    return res.status(200).json({ message: "Picture Unsave Successfully" });
+  } catch (err) {
     res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -305,6 +315,7 @@ export const unsavePicture = asyncHandler(async (req, res) => {
     });
   }
 });
+
 //@desc    get All pictures of all users
 // @route   GET /api/users/getSavePics
 // @access  Private
