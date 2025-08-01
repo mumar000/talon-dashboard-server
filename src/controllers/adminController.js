@@ -40,6 +40,8 @@ export const inviteAdmin = asyncHandler(async (req, res) => {
   try {
     const { name, email, password } = req.body;
     console.log("Request", req.body);
+
+
     const adminExists = await Admin.findOne({ email });
     if (adminExists) {
       return res.status(400).json({ message: "Email Already Registered" });
@@ -49,11 +51,12 @@ export const inviteAdmin = asyncHandler(async (req, res) => {
       name,
       email,
       password,
+      role:"admin"
     });
 
     generateToken(res, admin._id);
 
-    const inviteLink = "talon-admindashboard.netlify.app";
+    const inviteLink = "admin.taloninternational.com";
 
     await sendEmail({
       to: email,
@@ -108,8 +111,8 @@ export const inviteAdmin = asyncHandler(async (req, res) => {
         .button {
           display: inline-block;
           padding: 12px 20px;
-          background-color: #3b82f6;
-          color: white;
+          background-color: #bfdbfe;
+          color: black;
           text-decoration: none;
           border-radius: 6px;
           font-weight: bold;
@@ -130,7 +133,7 @@ export const inviteAdmin = asyncHandler(async (req, res) => {
         </div>
         <div class="content">
           <h2>Hello ${name},</h2>
-          <p>You’ve been invited to access the admin dashboard.</p>
+          <p>You’ve been invited to access the Admin Dashboard.</p>
           <p>Here are your login credentials:</p>
           <div class="credentials">
             <p><strong>Email:</strong> ${email}</p>
@@ -153,7 +156,7 @@ export const inviteAdmin = asyncHandler(async (req, res) => {
       id: admin._id,
       name: admin.name,
       email: admin.email,
-      role: "Master",
+      role: admin.role,
     });
   } catch (error) {
     res

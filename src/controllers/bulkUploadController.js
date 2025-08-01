@@ -1,5 +1,4 @@
 import asyncHandler from "express-async-handler";
-// import { Category, bulkUpload } from "../models/bulkUploadModel.js";
 import { Category } from "../models/bulkUploadModel.js";
 import { uploadToCloudinary } from "../middleware/uploadMiddleware.js";
 import User from "../models/userModel.js";
@@ -142,8 +141,8 @@ export const getAllPictures = asyncHandler(async (req, res) => {
 export const updateCategoryName = asyncHandler(async (req, res) => {
   const { categoryId } = req.params;
   const { name } = req.body;
-
-  if (!name || name.trim() === "") {
+  
+  if (!name) {
     return res.status(400).json({ message: "Category name is required" });
   }
 
@@ -154,17 +153,29 @@ export const updateCategoryName = asyncHandler(async (req, res) => {
       return res.status(404).json({ message: "Category not found" });
     }
 
-    // Check for duplicate name (optional but good practice)
     const existingCategory = await Category.findOne({ name });
     if (existingCategory && existingCategory._id.toString() !== categoryId) {
       return res.status(400).json({ message: "Category name already exists" });
     }
 
+   
+
     category.name = name;
-    await category.save();
+
+    const imageFields = ["cardImg","bannerImg"]
+
+    for (const field of imageFields){
+      if(req.files?.[field]?.[0]){
+        const buffer = req.files[field][0].buffer;
+        const url = await uploadToCloudinary(buffer, field)
+        category[field] = url
+      }
+    }
+
+    await category.save()
 
     res.status(200).json({
-      message: "Category name updated successfully",
+      message: "Category  updated successfully",
       category,
     });
   } catch (error) {
