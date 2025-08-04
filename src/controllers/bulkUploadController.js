@@ -9,33 +9,38 @@ import {
 import pLimit from "p-limit";
 import slugify from "slugify";
 
-
 export const addCategory = asyncHandler(async (req, res) => {
   try {
-    const { name } = req.body;
-    
-    const cardImgBuffer = req.files?.cardImg[0]?.buffer
+    const { name, description } = req.body;
+
+    const cardImgBuffer = req.files?.cardImg[0]?.buffer;
     const bannerImgBuffer = req.files?.bannerImg[0]?.buffer;
 
-    if(!cardImgBuffer || !bannerImgBuffer){
+    if (!cardImgBuffer || !bannerImgBuffer) {
       return res.status(400).json({
-        status:false,
-        message:"Please upload image for card"
-      })
+        status: false,
+        message: "Please upload image for card",
+      });
     }
 
-    const cardImgUrl = await uploadToCloudinary(cardImgBuffer, "cardImg")
-    const bannerImgUrl = await uploadToCloudinary(bannerImgBuffer, "bannerImg")
-   
+    const cardImgUrl = await uploadToCloudinary(cardImgBuffer, "cardImg");
+    const bannerImgUrl = await uploadToCloudinary(bannerImgBuffer, "bannerImg");
+
     const slug = slugify(name, { lower: true });
 
-    const existingCategory = await Category.findOne({ name });  
+    const existingCategory = await Category.findOne({ name });
 
     if (existingCategory) {
       return res.status(400).json({ message: "Category Already Exists" });
     }
 
-    const newCategory = await Category.create({ name, slug,cardImg:cardImgUrl, bannerImg:bannerImgUrl  });
+    const newCategory = await Category.create({
+      name,
+      slug,
+      description,
+      cardImg: cardImgUrl,
+      bannerImg: bannerImgUrl,
+    });
 
     return res.status(201).json({
       message: "Category Created Successfully",
@@ -84,22 +89,18 @@ export const uploadPictures = asyncHandler(async (req, res) => {
       uploadedUrls.push(...batchResults.filter((url) => url));
     }
 
-    // 3. Prepare update operation
     const update = {
       $inc: { totalUploadPics: uploadedUrls.length },
       $set: { updatedAt: new Date() },
     };
 
-    // Check if type exists
     const typeIndex = category.types.findIndex((t) => t.type === type);
 
     if (typeIndex >= 0) {
-      // Type exists - push to existing array
       update.$push = {
         [`types.${typeIndex}.uploaded_Pictures`]: { $each: uploadedUrls },
       };
     } else {
-      // Type doesn't exist - create new type
       update.$push = {
         types: { type, uploaded_Pictures: uploadedUrls },
       };
@@ -140,8 +141,8 @@ export const getAllPictures = asyncHandler(async (req, res) => {
 
 export const updateCategoryName = asyncHandler(async (req, res) => {
   const { categoryId } = req.params;
-  const { name } = req.body;
-  
+  const { name, description } = req.body;
+
   if (!name) {
     return res.status(400).json({ message: "Category name is required" });
   }
@@ -158,21 +159,20 @@ export const updateCategoryName = asyncHandler(async (req, res) => {
       return res.status(400).json({ message: "Category name already exists" });
     }
 
-   
-
     category.name = name;
+    category.description = description;
 
-    const imageFields = ["cardImg","bannerImg"]
+    const imageFields = ["cardImg", "bannerImg"];
 
-    for (const field of imageFields){
-      if(req.files?.[field]?.[0]){
+    for (const field of imageFields) {
+      if (req.files?.[field]?.[0]) {
         const buffer = req.files[field][0].buffer;
-        const url = await uploadToCloudinary(buffer, field)
-        category[field] = url
+        const url = await uploadToCloudinary(buffer, field);
+        category[field] = url;
       }
     }
 
-    await category.save()
+    await category.save();
 
     res.status(200).json({
       message: "Category  updated successfully",
