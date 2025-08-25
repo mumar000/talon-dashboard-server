@@ -283,6 +283,7 @@ export const unsavePicture = asyncHandler(async (req, res) => {
     const cleanUrl = (url) => decodeURIComponent(url).split("?")[0];
 
     const savedDoc = await SavedPicture.findOne({
+      user: req.user._id,
       originalBulkUpload: categoryId,
     });
 
