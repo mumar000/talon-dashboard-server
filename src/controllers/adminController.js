@@ -41,7 +41,6 @@ export const inviteAdmin = asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
     console.log("Request", req.body);
 
-
     const adminExists = await Admin.findOne({ email });
     if (adminExists) {
       return res.status(400).json({ message: "Email Already Registered" });
@@ -51,7 +50,7 @@ export const inviteAdmin = asyncHandler(async (req, res) => {
       name,
       email,
       password,
-      role:"admin"
+      role: "admin",
     });
 
     generateToken(res, admin._id);

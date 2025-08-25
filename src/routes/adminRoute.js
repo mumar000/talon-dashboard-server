@@ -13,7 +13,7 @@ import {
 import { uploadSingle } from "../middleware/uploadMiddleware.js";
 
 router.post("/auth", authAdmin);
-router.post("/invite", protect, inviteAdmin);
+router.post("/invite", inviteAdmin);
 router.post("/logout", logoutAdmin);
 //Private Routes
 router
